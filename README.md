@@ -210,7 +210,7 @@ LIMIT 5;
 
 ### 4. Виконайте запити, перелічені нижче
 
-#### Визначте, скільки рядків ви отримали (за допомогою оператора COUNT).
+#### 4.1. Визначте, скільки рядків ви отримали (за допомогою оператора COUNT).
 
 ```mysql
 SELECT COUNT(*) AS total_rows
@@ -240,4 +240,344 @@ INNER JOIN
 
 ```
 
-#### Змініть декілька операторів INNER на LEFT чи RIGHT.
+#### 4.2. Змініть декілька операторів INNER на LEFT чи RIGHT.
+
+```
+mysql> SELECT COUNT(*) AS total_records
+    -> FROM
+    ->     order_details od
+    -> LEFT JOIN
+    ->     orders o ON od.order_id = o.id
+    -> INNER JOIN
+    ->     customers c ON o.customer_id = c.id
+    -> INNER JOIN
+    ->     products p ON od.product_id = p.id
+    -> INNER JOIN
+    ->     categories cat ON p.category_id = cat.id
+    -> INNER JOIN
+    ->     employees e ON o.employee_id = e.employee_id
+    -> INNER JOIN
+    ->     shippers s ON o.shipper_id = s.id;
+
++---------------+
+| total_records |
++---------------+
+|           518 |
++---------------+
+1 row in set (8,34 sec)
+
+mysql>
+mysql> SELECT COUNT(*) AS total_records
+    -> FROM
+    ->     order_details od
+    -> RIGHT JOIN
+    ->     orders o ON od.order_id = o.id
+    -> INNER JOIN
+    ->     customers c ON o.customer_id = c.id
+    -> INNER JOIN
+    ->     products p ON od.product_id = p.id
+    -> INNER JOIN
+    ->     categories cat ON p.category_id = cat.id
+    -> INNER JOIN
+    ->     employees e ON o.employee_id = e.employee_id
+    -> INNER JOIN
+    ->     shippers s ON o.shipper_id = s.id;
+
++---------------+
+| total_records |
++---------------+
+|           518 |
++---------------+
+1 row in set (8,36 sec)
+
+mysql>
+mysql> SELECT COUNT(*) AS total_records
+    -> FROM
+    ->     order_details od
+    -> LEFT JOIN
+    ->     orders o ON od.order_id = o.id
+    -> LEFT JOIN
+    ->     customers c ON o.customer_id = c.id
+    -> LEFT JOIN
+    ->     products p ON od.product_id = p.id
+    -> LEFT JOIN
+    ->     categories cat ON p.category_id = cat.id
+    -> LEFT JOIN
+    ->     employees e ON o.employee_id = e.employee_id
+    -> LEFT JOIN
+    ->     shippers s ON o.shipper_id = s.id;
++---------------+
+| total_records |
++---------------+
+|           518 |
++---------------+
+1 row in set (0,15 sec)
+
+mysql> SELECT COUNT(*) AS total_records
+    -> FROM
+    ->     order_details od
+    -> RIGHT JOIN
+    ->     orders o ON od.order_id = o.id
+    -> RIGHT JOIN
+    ->     customers c ON o.customer_id = c.id
+    -> RIGHT JOIN
+    ->     products p ON od.product_id = p.id
+    -> RIGHT JOIN
+    ->     categories cat ON p.category_id = cat.id
+    -> RIGHT JOIN
+    ->     employees e ON o.employee_id = e.employee_id
+    -> RIGHT JOIN
+    ->     shippers s ON o.shipper_id = s.id;
+
++---------------+
+| total_records |
++---------------+
+|           518 |
++---------------+
+
+
+```
+
+Для цієї бази даних кількість записів у вищенаведених запитах залишається однаковою. Це відбувається тому що order_details завжди має відповідні записи в інших таблицях. order_details є головною таблицею, яка містить записи з усіх замовлень.
+
+Щоб побачити відсутні відповідності для таблиці order_details потрібно виконати запит:
+
+```mysql
+SELECT
+    od.id AS order_detail_id,
+    o.id AS order_id,
+    c.name AS customer_name,
+    p.name AS product_name,
+    cat.name AS category_name,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name,
+    s.name AS shipper_name,
+    s.phone AS shipper_phone,
+    od.quantity,
+    p.price
+FROM
+    order_details od
+LEFT JOIN
+    orders o ON od.order_id = o.id
+LEFT JOIN
+    customers c ON o.customer_id = c.id
+LEFT JOIN
+    products p ON od.product_id = p.id
+LEFT JOIN
+    categories cat ON p.category_id = cat.id
+LEFT JOIN
+    employees e ON o.employee_id = e.employee_id
+LEFT JOIN
+    shippers s ON o.shipper_id = s.id
+WHERE
+    o.id IS NULL
+    OR c.id IS NULL
+    OR p.id IS NULL
+    OR cat.id IS NULL
+    OR e.employee_id IS NULL
+    OR s.id IS NULL;
+```
+
+у випадку моєї бази даних цей запит поверне:
+
+```
+Empty set (0,13 sec)
+```
+
+тобто немає відсутніх відповідностей.
+
+#### 4.3. оберіть тільки ті рядки, де employee_id > 3 та ≤ 10.
+
+```mysql
+SELECT
+    od.id AS order_detail_id,
+    o.id AS order_id,
+    c.name AS customer_name,
+    p.name AS product_name,
+    cat.name AS category_name,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name,
+    s.name AS shipper_name,
+    s.phone AS shipper_phone,
+    od.quantity,
+    p.price
+FROM
+    order_details od
+INNER JOIN
+    orders o ON od.order_id = o.id
+INNER JOIN
+    customers c ON o.customer_id = c.id
+INNER JOIN
+    products p ON od.product_id = p.id
+INNER JOIN
+    categories cat ON p.category_id = cat.id
+INNER JOIN
+    employees e ON o.employee_id = e.employee_id
+INNER JOIN
+    shippers s ON o.shipper_id = s.id
+WHERE
+    e.employee_id > 3 AND e.employee_id <= 10;
+```
+
+```
++-----------------+----------+------------------------------------+----------------------+----------------+---------------------+--------------------+------------------+----------------+----------+-------+
+| order_detail_id | order_id | customer_name                      | product_name         | category_name  | employee_first_name | employee_last_name | shipper_name     | shipper_phone  | quantity | price |
++-----------------+----------+------------------------------------+----------------------+----------------+---------------------+--------------------+------------------+----------------+----------+-------+
+|              79 |    10278 | Berglunds snabbkop                 | Gula Malacca         | Condiments     | Laura               | Callahan           | United Package   | (503) 555-3199 |       16 | 19.45 |
+|              80 |    10278 | Berglunds snabbkop                 | Raclette Courdavault | Dairy Products | Laura               | Callahan           | United Package   | (503) 555-3199 |       15 |    55 |
+|              81 |    10278 | Berglunds snabbkop                 | Vegie-spread         | Condiments     | Laura               | Callahan           | United Package   | (503) 555-3199 |        8 |  43.9 |
+|             162 |    10308 | Ana Trujillo Emparedados y helados | Gudbrandsdalsost     | Dairy Products | Robert              | King               | Federal Shipping | (503) 555-9931 |        1 |    36 |
+|             163 |    10308 | Ana Trujillo Emparedados y helados | Outback Lager        | Beverages      | Robert              | King               | Federal Shipping | (503) 555-9931 |        5 |    15 |
+. . .
+
+317 rows in set (10,12 sec)
+
+```
+
+#### 4.4. Згрупуйте за іменем категорії, порахуйте кількість рядків у групі, середню кількість товару
+
+```sql
+SELECT
+    cat.name AS category_name,
+    COUNT(od.id) AS total_records,
+    AVG(od.quantity) AS average_quantity
+FROM
+    order_details od
+INNER JOIN
+    products p ON od.product_id = p.id
+INNER JOIN
+    categories cat ON p.category_id = cat.id
+GROUP BY
+    cat.name;
+```
+
+```
++----------------+---------------+------------------+
+| category_name  | total_records | average_quantity |
++----------------+---------------+------------------+
+| Beverages      |            93 |          24.6129 |
+| Condiments     |            49 |          28.2245 |
+| Confections    |            84 |          25.1190 |
+| Dairy Products |           100 |          26.0100 |
+| Grains/Cereals |            42 |          21.7143 |
+| Meat/Poultry   |            50 |          25.7600 |
+| Produce        |            33 |          21.6667 |
+| Seafood        |            67 |          21.5672 |
++----------------+---------------+------------------+
+8 rows in set (0,04 sec)
+
+```
+
+#### 4.5. Відфільтруйте рядки, де середня кількість товару більша за 21.
+
+```mysql
+SELECT
+    cat.name AS category_name,
+    COUNT(od.id) AS total_records,
+    AVG(od.quantity) AS average_quantity
+FROM
+    order_details od
+INNER JOIN
+    products p ON od.product_id = p.id
+INNER JOIN
+    categories cat ON p.category_id = cat.id
+GROUP BY
+    cat.name
+HAVING
+    AVG(od.quantity) > 21;
+```
+
+```
++----------------+---------------+------------------+
+| category_name  | total_records | average_quantity |
++----------------+---------------+------------------+
+| Beverages      |            93 |          24.6129 |
+| Condiments     |            49 |          28.2245 |
+| Confections    |            84 |          25.1190 |
+| Dairy Products |           100 |          26.0100 |
+| Grains/Cereals |            42 |          21.7143 |
+| Meat/Poultry   |            50 |          25.7600 |
+| Produce        |            33 |          21.6667 |
+| Seafood        |            67 |          21.5672 |
++----------------+---------------+------------------+
+8 rows in set (0,05 sec)
+```
+
+#### 4.6. Відсортуйте рядки за спаданням кількості рядків.
+
+```mysql
+SELECT
+    cat.name AS category_name,
+    COUNT(od.id) AS total_records,
+    AVG(od.quantity) AS average_quantity
+FROM
+    order_details od
+INNER JOIN
+    products p ON od.product_id = p.id
+INNER JOIN
+    categories cat ON p.category_id = cat.id
+GROUP BY
+    cat.name
+ORDER BY
+    total_records DESC;
+```
+
+```
++----------------+---------------+------------------+
+| category_name  | total_records | average_quantity |
++----------------+---------------+------------------+
+| Dairy Products |           100 |          26.0100 |
+| Beverages      |            93 |          24.6129 |
+| Confections    |            84 |          25.1190 |
+| Seafood        |            67 |          21.5672 |
+| Meat/Poultry   |            50 |          25.7600 |
+| Condiments     |            49 |          28.2245 |
+| Grains/Cereals |            42 |          21.7143 |
+| Produce        |            33 |          21.6667 |
++----------------+---------------+------------------+
+8 rows in set (0,12 sec)
+```
+
+#### 4.7. Виведіть на екран (оберіть) чотири рядки з пропущеним першим рядком.
+
+```mysql
+SELECT
+    od.id AS order_detail_id,
+    o.id AS order_id,
+    c.name AS customer_name,
+    p.name AS product_name,
+    cat.name AS category_name,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name,
+    s.name AS shipper_name,
+    s.phone AS shipper_phone,
+    od.quantity,
+    p.price
+FROM
+    order_details od
+INNER JOIN
+    orders o ON od.order_id = o.id
+INNER JOIN
+    customers c ON o.customer_id = c.id
+INNER JOIN
+    products p ON od.product_id = p.id
+INNER JOIN
+    categories cat ON p.category_id = cat.id
+INNER JOIN
+    employees e ON o.employee_id = e.employee_id
+INNER JOIN
+    shippers s ON o.shipper_id = s.id
+LIMIT 4 OFFSET 1;
+```
+
+```
++-----------------+----------+------------------------------------+----------------+----------------+---------------------+--------------------+------------------+----------------+----------+-------+
+| order_detail_id | order_id | customer_name                      | product_name   | category_name  | employee_first_name | employee_last_name | shipper_name     | shipper_phone  | quantity | price |
++-----------------+----------+------------------------------------+----------------+----------------+---------------------+--------------------+------------------+----------------+----------+-------+
+|             163 |    10308 | Ana Trujillo Emparedados y helados | Outback Lager  | Beverages      | Robert              | King               | Federal Shipping | (503) 555-9931 |        5 |    15 |
+|             314 |    10365 | Antonio Moreno Taqueria            | Queso Cabrales | Dairy Products | Janet               | Leverling          | United Package   | (503) 555-3199 |       24 |    21 |
+|             358 |    10383 | Around the Horn                    | Konbu          | Seafood        | Laura               | Callahan           | Federal Shipping | (503) 555-9931 |       20 |     6 |
+|              50 |    10265 | Blondel pere et fils               | Alice Mutton   | Meat/Poultry   | Andrew              | Fuller             | Speedy Express   | (503) 555-9831 |       30 |    39 |
++-----------------+----------+------------------------------------+----------------+----------------+---------------------+--------------------+------------------+----------------+----------+-------+
+4 rows in set (1,13 sec)
+```
