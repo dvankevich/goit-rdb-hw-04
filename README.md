@@ -162,3 +162,82 @@ WHERE bb.return_date IS NOT NULL;
 |       2 | user2    | Book 5 |             9 |
 +---------+----------+--------+---------------+
 ```
+
+## 3. Запит який об'єднує всі таблиці даних
+
+```mysql
+SELECT
+    od.id AS order_detail_id,
+    o.id AS order_id,
+    c.name AS customer_name,
+    p.name AS product_name,
+    cat.name AS category_name,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name,
+    s.name AS shipper_name,
+    s.phone AS shipper_phone,
+    od.quantity,
+    p.price
+FROM
+    order_details od
+INNER JOIN
+    orders o ON od.order_id = o.id
+INNER JOIN
+    customers c ON o.customer_id = c.id
+INNER JOIN
+    products p ON od.product_id = p.id
+INNER JOIN
+    categories cat ON p.category_id = cat.id
+INNER JOIN
+    employees e ON o.employee_id = e.employee_id
+INNER JOIN
+    shippers s ON o.shipper_id = s.id
+LIMIT 5;
+```
+
+```
++-----------------+----------+------------------------------------+------------------+----------------+---------------------+--------------------+------------------+----------------+----------+-------+
+| order_detail_id | order_id | customer_name                      | product_name     | category_name  | employee_first_name | employee_last_name | shipper_name     | shipper_phone  | quantity | price |
++-----------------+----------+------------------------------------+------------------+----------------+---------------------+--------------------+------------------+----------------+----------+-------+
+|             162 |    10308 | Ana Trujillo Emparedados y helados | Gudbrandsdalsost | Dairy Products | Robert              | King               | Federal Shipping | (503) 555-9931 |        1 |    36 |
+|             163 |    10308 | Ana Trujillo Emparedados y helados | Outback Lager    | Beverages      | Robert              | King               | Federal Shipping | (503) 555-9931 |        5 |    15 |
+|             314 |    10365 | Antonio Moreno Taqueria            | Queso Cabrales   | Dairy Products | Janet               | Leverling          | United Package   | (503) 555-3199 |       24 |    21 |
+|             358 |    10383 | Around the Horn                    | Konbu            | Seafood        | Laura               | Callahan           | Federal Shipping | (503) 555-9931 |       20 |     6 |
+|              50 |    10265 | Blondel pere et fils               | Alice Mutton     | Meat/Poultry   | Andrew              | Fuller             | Speedy Express   | (503) 555-9831 |       30 |    39 |
++-----------------+----------+------------------------------------+------------------+----------------+---------------------+--------------------+------------------+----------------+----------+-------+
+
+```
+
+### 4. Виконайте запити, перелічені нижче
+
+#### Визначте, скільки рядків ви отримали (за допомогою оператора COUNT).
+
+```mysql
+SELECT COUNT(*) AS total_rows
+FROM
+    order_details od
+INNER JOIN
+    orders o ON od.order_id = o.id
+INNER JOIN
+    customers c ON o.customer_id = c.id
+INNER JOIN
+    products p ON od.product_id = p.id
+INNER JOIN
+    categories cat ON p.category_id = cat.id
+INNER JOIN
+    employees e ON o.employee_id = e.employee_id
+INNER JOIN
+    shippers s ON o.shipper_id = s.id;
+```
+
+```
++------------+
+| total_rows |
++------------+
+|        518 |
++------------+
+1 row in set (8,36 sec)
+
+```
+
+#### Змініть декілька операторів INNER на LEFT чи RIGHT.
